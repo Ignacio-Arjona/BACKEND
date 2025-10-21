@@ -1,8 +1,9 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors'); // ✅ Added CORS
 
 const app = express();
+app.use(cors()); // ✅ Enable CORS
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
