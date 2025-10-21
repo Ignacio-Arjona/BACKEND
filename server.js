@@ -1,8 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+const cors = require('cors'); // ✅ Added CORS
+
 const app = express();
-app.use(cors());
+app.use(cors()); // ✅ Enable CORS
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
@@ -13,6 +14,7 @@ const UserSchema = new mongoose.Schema({
   username: String,
   password: String,
 });
+
 const User = mongoose.model('User', UserSchema);
 
 app.post('/signup', async (req, res) => {
@@ -21,6 +23,8 @@ app.post('/signup', async (req, res) => {
   await user.save();
   res.send('User saved!');
 });
+
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
