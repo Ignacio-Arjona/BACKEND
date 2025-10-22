@@ -19,6 +19,14 @@ const User = mongoose.model('User', UserSchema);
 
 app.post('/signup', async (req, res) => {
   const { username, password } = req.body;
+
+  // Verificar si el usuario ya existe
+  const existingUser = await User.findOne({ username });
+  if (existingUser) {
+    return res.status(409).send('Username already exists');
+  }
+
+  // Crear y guardar el nuevo usuario
   const user = new User({ username, password });
   await user.save();
   res.send('User saved!');
