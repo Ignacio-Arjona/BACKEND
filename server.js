@@ -13,12 +13,19 @@ mongoose.connect(process.env.MONGO_URI)
 const UserSchema = new mongoose.Schema({
   username: String,
   password: String,
+  email: String,
 });
 
 const User = mongoose.model('User', UserSchema);
 
 app.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, email } = req.body;
+
+  // Verificar si el correo ya existe
+  const existingEmail = await User.findOne({ email })
+  if (existingEmail) {
+    return res.status(410).send('Email already registered')
+  }
 
   // Verificar si el usuario ya existe
   const existingUser = await User.findOne({ username });
@@ -27,7 +34,7 @@ app.post('/signup', async (req, res) => {
   }
 
   // Crear y guardar el nuevo usuario
-  const user = new User({ username, password });
+  const user = new User({ email, username, password});
   await user.save();
   res.send('User saved!');
 });
