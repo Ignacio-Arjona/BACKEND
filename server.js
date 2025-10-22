@@ -57,10 +57,15 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
 app.delete('/delete', async (req, res) => {
   const { username, password } = req.body;
-  const result = await User.deleteOne({ username, password });
+
+  // Buscar y eliminar por username o email
+  const result = await User.deleteOne({
+    $or: [{ username }, { email: username }],
+    password
+  });
+
   if (result.deletedCount > 0) {
     res.send('Account deleted');
   } else {
