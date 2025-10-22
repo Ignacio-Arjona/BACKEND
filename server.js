@@ -43,13 +43,20 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ username, password });
+
+  // Buscar por username o email
+  const user = await User.findOne({
+    $or: [{ username }, { email: username }],
+    password
+  });
+
   if (user) {
     res.send('Login successful!');
   } else {
     res.status(401).send('Invalid credentials');
   }
 });
+
 
 app.delete('/delete', async (req, res) => {
   const { username, password } = req.body;
