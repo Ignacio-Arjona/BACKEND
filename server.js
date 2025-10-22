@@ -75,7 +75,13 @@ app.delete('/delete', async (req, res) => {
 
 app.put('/change-password', async (req, res) => {
   const { username, oldPassword, newPassword } = req.body;
-  const user = await User.findOne({ username, password: oldPassword });
+
+  // Buscar por username o email
+  const user = await User.findOne({
+    $or: [{ username }, { email: username }],
+    password: oldPassword
+  });
+
   if (user) {
     user.password = newPassword;
     await user.save();
