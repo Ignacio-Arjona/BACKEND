@@ -18,6 +18,9 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
+app.get('/wakeup', (req, res) => res.send('OK'));
+
+
 app.post('/signup', async (req, res) => {
   const { email, username, password } = req.body;
 
