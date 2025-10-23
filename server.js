@@ -36,7 +36,7 @@ app.post('/signup', async (req, res) => {
   // Crear y guardar el nuevo usuario
   const user = new User({ email, username, password});
   await user.save();
-  res.send('¡Usuario guardado!');
+  res.send('¡Usuario Guardado!');
 });
 
 
@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
   });
 
   if (user) {
-    res.send('Login successful!');
+    res.send('¡Sesión Iniciada!');
   } else {
     res.status(401).send('Los datos introducidos no son correctos. Inténtalo de nuevo.﻿');
   }
