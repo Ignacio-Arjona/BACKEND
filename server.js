@@ -19,24 +19,24 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 app.post('/signup', async (req, res) => {
-  const { username, password, email } = req.body;
+  const { email, username, password } = req.body;
 
   // Verificar si el correo ya existe
   const existingEmail = await User.findOne({ email })
   if (existingEmail) {
-    return res.status(410).send('Email already registered')
+    return res.status(410).send('Este correo electrónico ya está asociado a una cuenta.')
   }
 
   // Verificar si el usuario ya existe
   const existingUser = await User.findOne({ username });
   if (existingUser) {
-    return res.status(409).send('Username already exists');
+    return res.status(409).send('Este nombre de usuario ya está asociado a una cuenta.');
   }
 
   // Crear y guardar el nuevo usuario
   const user = new User({ email, username, password});
   await user.save();
-  res.send('User saved!');
+  res.send('¡Usuario guardado!');
 });
 
 
@@ -53,7 +53,7 @@ app.post('/login', async (req, res) => {
   if (user) {
     res.send('Login successful!');
   } else {
-    res.status(401).send('Invalid credentials');
+    res.status(401).send('Los datos introducidos no son correctos. Inténtalo de nuevo.﻿');
   }
 });
 
