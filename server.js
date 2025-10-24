@@ -115,5 +115,15 @@ app.post('/save-book', async (req, res) => {
   }
 });
 
+app.get('/get-books', async (req, res) => {
+  try {
+    const books = await Book.find().sort({ createdAt: -1 }); // Most recent first
+    res.json(books);
+  } catch (error) {
+    console.error('Error fetching books:', error);
+    res.status(500).json({ error: 'Error al obtener los libros' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
