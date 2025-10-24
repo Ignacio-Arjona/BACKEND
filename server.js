@@ -1,74 +1,76 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // ✅ Added CORS
-
+const cors = require('cors');
 const app = express();
-app.use(cors()); // ✅ Enable CORS
-app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+app.use(cors());
+app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
 
+// ✅ Connect to User Database
+const userDB = mongoose.createConnection(process.env.MONGO_URI);
+userDB.on('connected', () => console.log('Connected to User Database (MONGO_URI)'));
+userDB.on('error', (err) => console.error('User DB connection error:', err));
+
+// ✅ Connect to Book Database
+const bookDB = mongoose.createConnection(process.env.MONGO_BOOK);
+bookDB.on('connected', () => console.log('Connected to Book Database (MONGO_BOOK)'));
+bookDB.on('error', (err) => console.error('Book DB connection error:', err));
+
+// User Schema (connected to MONGO_URI)
 const UserSchema = new mongoose.Schema({
   username: String,
   password: String,
   email: String,
 });
+const User = userDB.model('User', UserSchema);
 
-const User = mongoose.model('User', UserSchema);
+// ✅ Book Schema (connected to MONGO_BOOK)
+const BookSchema = new mongoose.Schema({
+  bookName: String,
+  bookAuthor: String,
+  bookDescription: String,
+  bookImage: String, // base64 encoded image
+  createdAt: { type: Date, default: Date.now }
+});
+const Book = bookDB.model('Book', BookSchema);
 
 app.get('/wakeup', (req, res) => res.send('OK'));
 
-
+// User routes (existing - using MONGO_URI)
 app.post('/signup', async (req, res) => {
   const { email, username, password } = req.body;
-
-  // Verificar si el correo ya existe
-  const existingEmail = await User.findOne({ email })
+  const existingEmail = await User.findOne({ email });
   if (existingEmail) {
-    return res.status(410).send('Este correo electrónico ya está asociado a una cuenta.')
+    return res.status(410).send('Este correo electrónico ya está asociado a una cuenta.');
   }
-
-  // Verificar si el usuario ya existe
   const existingUser = await User.findOne({ username });
   if (existingUser) {
     return res.status(409).send('Este nombre de usuario ya está asociado a una cuenta.');
   }
-
-  // Crear y guardar el nuevo usuario
-  const user = new User({ email, username, password});
+  const user = new User({ email, username, password });
   await user.save();
   res.send('¡Usuario Guardado!');
 });
 
-
-
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
-  // Buscar por username o email
   const user = await User.findOne({
     $or: [{ username }, { email: username }],
     password
   });
-
   if (user) {
     res.send('¡Sesión Iniciada!');
   } else {
-    res.status(401).send('Los datos introducidos no son correctos. Inténtalo de nuevo.﻿');
+    res.status(401).send('Los datos introducidos no son correctos. Inténtalo de nuevo.');
   }
 });
 
 app.delete('/delete', async (req, res) => {
   const { username, password } = req.body;
-
-  // Buscar y eliminar por username o email
   const result = await User.deleteOne({
     $or: [{ username }, { email: username }],
     password
   });
-
   if (result.deletedCount > 0) {
     res.send('Account deleted');
   } else {
@@ -78,13 +80,10 @@ app.delete('/delete', async (req, res) => {
 
 app.put('/change-password', async (req, res) => {
   const { username, oldPassword, newPassword } = req.body;
-
-  // Buscar por username o email
   const user = await User.findOne({
     $or: [{ username }, { email: username }],
     password: oldPassword
   });
-
   if (user) {
     user.password = newPassword;
     await user.save();
@@ -98,4 +97,23 @@ app.post('/logout', (req, res) => {
   res.send('Logged out');
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+// ✅ Book route (using MONGO_BOOK)
+app.post('/save-book', async (req, res) => {
+  try {
+    const { bookName, bookAuthor, bookDescription, bookImage } = req.body;
+    
+    if (!bookName || !bookAuthor || !bookDescription || !bookImage) {
+      return res.status(400).send('Todos los campos son obligatorios');
+    }
+
+    const book = new Book({ bookName, bookAuthor, bookDescription, bookImage });
+    await book.save();
+    res.send('¡Libro guardado exitosamente!');
+  } catch (error) {
+    console.error('Error saving book:', error);
+    res.status(500).send('Error al guardar el libro');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
